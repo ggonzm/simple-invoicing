@@ -1,0 +1,23 @@
+[project]
+name = "simple-invoicing"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Guzman Gonzalez", email = ""},
+]
+dependencies = [
+]
+requires-python = "==3.12.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+package-type = "application"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=7.4.3",
+    "pytest-sugar>=0.9.7",
+    "pytest-cov>=4.1.0",
+]
