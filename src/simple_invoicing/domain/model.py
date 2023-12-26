@@ -1,53 +1,70 @@
 from __future__ import annotations
+from typing import Optional
 
 
 class Category:
-    _instances = {}
 
-    def __new__(cls, name: str, *args, **kwargs) -> Category:
-        if name in cls._instances:
-            return cls._instances[name]
-        else:
-            instance = super().__new__(cls)
-            cls._instances[name] = instance
-            return instance
-
-    def __init__(self, name: str):
-        self._name = name
-        if not hasattr(self, "_subcategories"):
-            self._subcategories = dict()
+    def __init__(self, name: str, parent: Optional[Category] = None):
+        self._name = name.upper()
+        self._subcategories = dict()
+        self._parent = parent
+        if self._parent:
+            self._parent._subcategories[self._name] = self
 
     @property
     def name(self) -> str:
         return self._name
 
-    def add_subcategories(self, *subcategories: Category) -> None:
-        for subcategory in subcategories:
-            self._subcategories[subcategory.name] = subcategory
-
-    def get_leaves(self) -> list[Category]:
-        if not self._subcategories:
-            return [self]
+    @property
+    def parent(self) -> Optional[Category]:
+        return self._parent
+    
+    def get_root(self) -> Category:
+        if not self._parent:
+            return self
         else:
-            leaves = []
+            return self._parent.get_root()
+        
+    
+    def get_leaves(self) -> set[Category]:
+        if not self._subcategories:
+            return set([self])
+        else:
+            leaves = set()
             for subcategory in self._subcategories.values():
-                leaves.extend(subcategory.get_leaves())
+                leaves.update(subcategory.get_leaves())
             return leaves
+        
+    
+    def delete(self) -> None:
+        if self._parent:
+            del self._parent._subcategories[self._name]
+        subcategory_names = list(self._subcategories.keys())
+        for name in subcategory_names:
+            del self._subcategories[name]
+        del self
+
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Category):
             return False
-        return self._name == other._name and self._subcategories == other._subcategories
+        return self._name == other._name and self._parent == other._parent and self._subcategories == other._subcategories
 
     def __hash__(self) -> int:
-        return hash(self._name)
+        if self._parent:
+            return hash(self._parent.name+'.'+self._name)
+        else:
+            return hash(self._name)
 
     def __repr__(self) -> str:
-        return f"Category(name={self._name})"
+        if self._parent:
+            return f"Category(name={self._name}, parent={self._parent.name})"
+        else:
+            return f"Category(name={self._name})"
 
     def __str__(self, level=0):
         """Returns a string representation of the tree"""
-        ret = "\t" * level + "|---" * (level > 0) + repr(self) + "\n"
+        ret = "  " * level + "|---" * (level > 0) + self._name + "\n"
         for _, child in self._subcategories.items():
             ret += child.__str__(level + 1)
         return ret

@@ -1,45 +1,40 @@
-import pytest
 from model import Category
 
 
-@pytest.fixture
-def make_category():
-    def _category(name: str):
-        category = Category(name)
-        return category
+def test_subcategory_assignation_to_category():
+    root = Category("Raíz desnuda")
+    subcategory1 = Category("Hueso", parent=root)
+    subcategory2 = Category("Pepita", parent=root)
 
-    yield _category
-    # Teardown Categories
-    Category._instances.clear()
+    assert root._subcategories["HUESO"] == subcategory1
+    assert root._subcategories["PEPITA"] == subcategory2
 
 
-def test_subcategory_assignation_to_category(make_category):
-    category = make_category("Raíz desnuda")
-    subcategory1 = make_category("Hueso")
-    subcategory2 = make_category("Pepita")
-    category.add_subcategories(subcategory1, subcategory2)
+def test_get_root_category():
+    root = Category("Raíz desnuda")
+    subcategory1 = Category("Hueso", parent=root)
+    subcategory2 = Category("Primera", parent=subcategory1)
 
-    assert category._subcategories["Hueso"] == subcategory1
-    assert category._subcategories["Pepita"] == subcategory2
+    assert root == subcategory2.get_root()
 
 
-def test_category_equality(make_category):
-    category1 = make_category("Raíz desnuda")
-    subcategory1 = make_category("Hueso")
-    category1.add_subcategories(subcategory1)
+def test_get_final_subcategories():
+    root = Category("Raíz desnuda")
+    subcategory1 = Category("Hueso", parent=root)
+    subcategory2 = Category("Pepita", parent=root)
+    subcategory3 = Category("Primera", parent=subcategory1)
+    subcategory4 = Category("Primera", parent=subcategory2)
+    
+    assert root.get_leaves() == set([subcategory3, subcategory4])
 
-    category2 = make_category("Raíz desnuda")
-    subcategory2 = make_category("Pepita")
-    category2.add_subcategories(subcategory2)
+def test_category_deletion_given_one_subcategory():
+    root = Category("Raíz desnuda")
+    subcategory1 = Category("Hueso", parent=root)
+    subcategory2 = Category("Pepita", parent=root)
+    subcategory3 = Category("Primera", parent=subcategory1)
+    subcategory4 = Category("Primera", parent=subcategory2)
+    
+    subcategory2.delete()
 
-    assert category1 == category2
+    assert root.get_leaves() == set([subcategory3])
 
-
-def test_categories_are_idempotent(make_category):
-    category1 = make_category("Raíz desnuda")
-    subcategory1 = make_category("Hueso")
-    category1.add_subcategories(subcategory1)
-    category1.add_subcategories(subcategory1)
-    category1.add_subcategories(subcategory1)
-
-    assert category1._subcategories == {"Hueso": subcategory1}
