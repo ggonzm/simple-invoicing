@@ -21,3 +21,5 @@ test = [
     "pytest-sugar>=0.9.7",
     "pytest-cov>=4.1.0",
 ]
+dev = [
+]

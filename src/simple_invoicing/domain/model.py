@@ -1,70 +1,78 @@
 from __future__ import annotations
-from typing import Optional
+
+from dataclasses import dataclass
+from typing import Optional, Self
+
+from TreeStruct import Node
+from exceptions import CategoryError
 
 
-class Category:
+@dataclass(frozen=True)
+class FruitTree:
+    id: int
+    description: str
+    family: str
+    rootstock: str
 
-    def __init__(self, name: str, parent: Optional[Category] = None):
-        self._name = name.upper()
-        self._subcategories = dict()
-        self._parent = parent
-        if self._parent:
-            self._parent._subcategories[self._name] = self
+
+@dataclass(frozen=True)
+class Rootstock:
+    description: str
+
+
+class Category[T: (FruitTree, Rootstock)](Node):
+    def __init__(self, name: str, parent: Optional[Self] = None):
+        self._products: set[T] = set()
+        self._price: Optional[float] = None
+        super().__init__(name, parent)
 
     @property
-    def name(self) -> str:
-        return self._name
+    def products(self) -> set[T]:
+        if self.is_internal():
+            for leaf in self.leaves:
+                self._products.update(leaf.products)
+        return self._products
 
     @property
-    def parent(self) -> Optional[Category]:
-        return self._parent
-    
-    def get_root(self) -> Category:
-        if not self._parent:
-            return self
+    def price(self) -> float | None:
+        return self._price if not self.is_internal() else None
+
+    @price.setter
+    def price(self, value: float) -> None:
+        if self.is_internal():
+            self._price = None
+            raise CategoryError("Price can only be assigned to last level categories")
+        self._price = value
+
+    def add_subcategory(
+        self, name: str
+    ) -> Self:  # Self and self.__class__ could be replaced by Category[T], but I prefer this way
+        return self.__class__(name, self)
+
+    def add_products(self, *products: T) -> None:
+        '''Adds products to the category. If the category is internal, the products are added to the leaves'''
+        if self.is_internal():
+            for leaf in self.leaves:
+                leaf.add_products(*products)
+        for product in products:
+            self._products.add(product)
+
+    def get_product_prices(self, product: T) -> dict[str,float|None]:
+        '''Returns a dictionary with the prices of the product in category leaves'''
+        prices: dict[str,float|None] = {}
+        for leaf in self.leaves:
+            if product in leaf:
+                prices[leaf.name] = leaf.price
+        if prices :
+            return prices
+        raise CategoryError("Product not found in category")
+
+    def __contains__(self, item: T | Self) -> bool:
+        if isinstance(item, Category):
+            return super().__contains__(item)
         else:
-            return self._parent.get_root()
-        
-    
-    def get_leaves(self) -> set[Category]:
-        if not self._subcategories:
-            return set([self])
-        else:
-            leaves = set()
-            for subcategory in self._subcategories.values():
-                leaves.update(subcategory.get_leaves())
-            return leaves
-        
-    
-    def delete(self) -> None:
-        if self._parent:
-            del self._parent._subcategories[self._name]
-        subcategory_names = list(self._subcategories.keys())
-        for name in subcategory_names:
-            del self._subcategories[name]
-        del self
+            return item in self._products
 
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Category):
-            return False
-        return self._name == other._name and self._parent == other._parent and self._subcategories == other._subcategories
-
-    def __hash__(self) -> int:
-        if self._parent:
-            return hash(self._parent.name+'.'+self._name)
-        else:
-            return hash(self._name)
-
-    def __repr__(self) -> str:
-        if self._parent:
-            return f"Category(name={self._name}, parent={self._parent.name})"
-        else:
-            return f"Category(name={self._name})"
-
-    def __str__(self, level=0):
-        """Returns a string representation of the tree"""
-        ret = "  " * level + "|---" * (level > 0) + self._name + "\n"
-        for _, child in self._subcategories.items():
-            ret += child.__str__(level + 1)
-        return ret
+class Client:
+    pass
