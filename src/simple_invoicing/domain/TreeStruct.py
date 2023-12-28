@@ -29,6 +29,13 @@ class Node:
     @property
     def parent(self) -> Optional[Self]:
         return self._parent
+    
+    @property
+    def path(self) -> str:
+        if self._parent:
+            return self._parent.path + "." + self._name
+        else:
+            return self._name
 
     @property
     def leaves(self) -> set[Self]:
@@ -66,16 +73,12 @@ class Node:
         ):  # tricky point. Self is for type annotation, but we need to check if other iherits from Node
             return False
         return (
-            self._name == other._name
-            and self._parent == other._parent
+            self.path == other.path
             and self._children == other._children
         )
 
     def __hash__(self) -> int:
-        if self._parent:
-            return hash(self._parent.name + "." + self._name)
-        else:
-            return hash(self._name)
+        return hash(self.path)
 
     def __repr__(self) -> str:
         if self._parent:

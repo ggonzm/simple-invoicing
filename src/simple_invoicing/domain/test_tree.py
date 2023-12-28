@@ -41,6 +41,14 @@ def test_leaves_property(tree):
     assert n4 in n2.leaves
     assert n5 in n3.leaves
 
+def test_path_property(tree):
+    n1, n2, n3, n4, n5 = tree
+
+    assert n1.path == "1"
+    assert n2.path == "1.2"
+    assert n3.path == "1.3"
+    assert n4.path == "1.2.4"
+    assert n5.path == "1.3.5"
 
 def test_get_root_and_parent_of_nodes(tree):
     n1, n2, _, n4, _ = tree
