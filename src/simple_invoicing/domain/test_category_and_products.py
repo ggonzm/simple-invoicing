@@ -1,4 +1,4 @@
-from model import Category, FruitTree, Rootstock
+from model import Category, FruitTree, Rootstock, Family
 from exceptions import CategoryError
 import pytest
 
@@ -23,18 +23,41 @@ def fruit_category_tree():
     return (n1, n2, n3, n4, n5, n6, n7)
 
 @pytest.fixture
-def fruit_trees():
-    product1 = FruitTree(11011, "Malus domestica Manzanos GOLDEN D.", "MANZANO", "MM-109")
-    product2 = FruitTree(11012, "Manzano de mesa", "MANZANO", "MM-109")
-    product3 = FruitTree(11045, "Prunus domestica Ciruelos GOLDEN JAPAN", "CIRUELO", "Mirabolan")
+def families():
+    return (Family(sci_name="Malus domestica", name="manzanos"), Family(sci_name="Prunus domestica", name="ciruelos"))
+
+@pytest.fixture
+def fruit_trees(rootstock, families):
+    family1, family2 = families
+    product1 = FruitTree(family=family1, name="GOLDEN D.", rootstock=rootstock)
+    product2 = FruitTree(family=family1, name="manzano generico", rootstock=rootstock)
+    product3 = FruitTree(family=family2, name="GOLDEN JAPAN", rootstock=None)
     return (product1, product2, product3)
 
 @pytest.fixture
-def rootstock():
-    return Rootstock("MM-109")
+def rootstock(families):
+    family1, _ = families
+    return Rootstock(family=family1, id='MM-109')
 
 
+def test_products_creation(fruit_trees, rootstock, families):
+    product1, product2, product3 = fruit_trees
+    family1, family2 = families
 
+    assert str(product1) == "Malus domestica Manzanos GOLDEN D." 
+    assert product1.family == family1
+
+    assert str(product2) == "Malus domestica Manzanos MANZANO GENERICO"
+    assert str(product3) == "Prunus domestica Ciruelos GOLDEN JAPAN"
+    assert product3.family == family2
+
+    assert product1.rootstock == rootstock
+    assert str(rootstock) == "Malus domestica Portainjertos Manzanos MM-109"
+    assert rootstock.family == family1
+
+    assert product2.rootstock == rootstock
+    assert product3.rootstock is None
+    
 
 def test_subcategory_creation():
     n1 = Category[FruitTree]("Raíz desnuda")

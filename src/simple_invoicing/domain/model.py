@@ -6,18 +6,32 @@ from typing import Optional, Self
 from TreeStruct import Node
 from exceptions import CategoryError
 
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class FruitTree:
-    id: int
-    description: str
-    family: str
-    rootstock: str
+    family: Family
+    name: str
+    rootstock: Optional[Rootstock] = None   #¿Si family no coincide con la de portainjertos? TODO: mirar libreria attrs y field() en dataclasses
+
+    def __str__(self) -> str:
+        return  str(self.family) + " " + self.name.upper()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Rootstock:
-    description: str
+    family: Family
+    id : str
+    
+    def __str__(self) -> str:
+        return self.family.sci_name.capitalize() + " Portainjertos " + self.family.name.capitalize() + " " + self.id
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Family:
+    sci_name: str
+    name: str
+
+    def __str__(self) -> str:
+        return self.sci_name.capitalize() + " " + self.name.capitalize()
 
 
 class Category[T: (FruitTree, Rootstock)](Node):
