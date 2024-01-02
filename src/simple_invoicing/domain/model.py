@@ -5,23 +5,32 @@ from typing import Optional, Self
 
 from .TreeStruct import Node
 
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FruitTree:
     family: Family
     name: str
-    rootstock: Optional[Rootstock] = None   #¿Si family no coincide con la de portainjertos? TODO: mirar libreria attrs y field() en dataclasses
+    rootstock: Optional[
+        Rootstock
+    ] = None  # ¿Si family no coincide con la de portainjertos? TODO: mirar libreria attrs y field() en dataclasses
 
     def __str__(self) -> str:
-        return  str(self.family) + " " + self.name.upper()
+        return str(self.family) + " " + self.name.upper()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Rootstock:
     family: Family
-    id : str
-    
+    id: str
+
     def __str__(self) -> str:
-        return self.family.sci_name.capitalize() + " Portainjertos " + self.family.name.capitalize() + " " + self.id
+        return (
+            self.family.sci_name.capitalize()
+            + " Portainjertos "
+            + self.family.name.capitalize()
+            + " "
+            + self.id
+        )
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -51,7 +60,7 @@ class Category[T: (FruitTree, Rootstock)](Node):
         return self.__class__(name, self)
 
     def add_products(self, *products: T) -> None:
-        '''Adds products to the category. If the category is internal, the products are added to the leaves'''
+        """Adds products to the category. If the category is internal, the products are added to the leaves"""
         if self.is_internal():
             for leaf in self.leaves:
                 leaf.add_products(*products)
@@ -64,6 +73,7 @@ class Category[T: (FruitTree, Rootstock)](Node):
         else:
             return item in self.products
 
+
 @dataclass
 class Client:
     dni_nif: str
@@ -72,10 +82,10 @@ class Client:
     location: str
     address: str
     zip_code: str
-    phone:str | None
+    phone: str | None
 
     def __post_init__(self) -> None:
-        self._category_prices: dict[str,float|None] = {}
+        self._category_prices: dict[str, float | None] = {}
 
 
 def add_category_price(client: Client, category: Category, price: float) -> None:

@@ -29,7 +29,7 @@ class Node:
     @property
     def parent(self) -> Optional[Self]:
         return self._parent
-    
+
     @property
     def path(self) -> str:
         if self._parent:
@@ -72,10 +72,7 @@ class Node:
             other, Node
         ):  # tricky point. Self is for type annotation, but we need to check if other iherits from Node
             return False
-        return (
-            self.path == other.path
-            and self._children == other._children
-        )
+        return self.path == other.path and self._children == other._children
 
     def __hash__(self) -> int:
         return hash(self.path)
