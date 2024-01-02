@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Optional, Self
 
 from TreeStruct import Node
-from exceptions import CategoryError
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FruitTree:
@@ -37,7 +36,6 @@ class Family:
 class Category[T: (FruitTree, Rootstock)](Node):
     def __init__(self, name: str, parent: Optional[Self] = None):
         self._products: set[T] = set()
-        self._price: Optional[float] = None
         super().__init__(name, parent)
 
     @property
@@ -46,17 +44,6 @@ class Category[T: (FruitTree, Rootstock)](Node):
             for leaf in self.leaves:
                 self._products.update(leaf.products)
         return self._products
-
-    @property
-    def price(self) -> float | None:
-        return self._price if not self.is_internal() else None
-
-    @price.setter
-    def price(self, value: float) -> None:
-        if self.is_internal():
-            self._price = None
-            raise CategoryError("Price can only be assigned to last level categories")
-        self._price = value
 
     def add_subcategory(
         self, name: str
@@ -71,22 +58,25 @@ class Category[T: (FruitTree, Rootstock)](Node):
         for product in products:
             self._products.add(product)
 
-    def get_product_prices(self, product: T) -> dict[str,float|None]:
-        '''Returns a dictionary with the prices of the product in category leaves'''
-        prices: dict[str,float|None] = {}
-        for leaf in self.leaves:
-            if product in leaf:
-                prices[leaf.name] = leaf.price
-        if prices :
-            return prices
-        raise CategoryError("Product not found in category")
-
     def __contains__(self, item: T | Self) -> bool:
         if isinstance(item, Category):
             return super().__contains__(item)
         else:
-            return item in self._products
+            return item in self.products
 
-
+@dataclass
 class Client:
-    pass
+    dni_nif: str
+    name: str
+    tax_name: str
+    location: str
+    address: str
+    zip_code: str
+    phone:str | None
+
+    def __post_init__(self) -> None:
+        self._category_prices: dict[str,float|None] = {}
+
+
+def add_category_price(client: Client, category: Category, price: float) -> None:
+    client._category_prices[category.path] = price
