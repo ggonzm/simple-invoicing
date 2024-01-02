@@ -1,4 +1,4 @@
-from TreeStruct import Node
+from src.simple_invoicing.domain.TreeStruct import Node
 import pytest
 
 @pytest.fixture

@@ -1,5 +1,4 @@
-from model import Client, add_category_price
-import pytest
+from src.simple_invoicing.domain.model import add_category_price
 
 def test_price_assignment_to_products(fruit_category_tree, clients):
     n1, n2, _, n4,*_ = fruit_category_tree

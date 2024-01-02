@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Self
 
-from TreeStruct import Node
+from .TreeStruct import Node
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FruitTree:

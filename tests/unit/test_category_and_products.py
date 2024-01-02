@@ -1,7 +1,4 @@
-from model import Category, FruitTree
-from exceptions import CategoryError
-import pytest
-
+from src.simple_invoicing.domain.model import Category, FruitTree
 
 def test_products_creation(fruit_trees, rootstock, families):
     product1, product2, product3 = fruit_trees

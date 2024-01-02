@@ -1,4 +1,4 @@
-from model import Category, FruitTree, Rootstock, Family, Client
+from src.simple_invoicing.domain.model import Category, FruitTree, Rootstock, Family, Client
 
 import pytest
 
