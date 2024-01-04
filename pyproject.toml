@@ -26,7 +26,9 @@ dev = [
 ]
 
 [tool.pdm.scripts]
-tests = "pytest"
-tests-cov = "pytest --cov=."
+unit-tests = "pytest tests/unit/ --cov=src/"
+integration-tests = "pytest tests/integration/ --cov=src/simple_invoicing/adapters --cov=src/simple_invoicing/services"
+e2e-tests = "pytest tests/e2e/"
+tests = {composite = ["unit-tests", "integration-tests", "e2e-tests"]}
 format = "ruff format ."
-all = {composite = ["tests-cov", "format"]}
+all = {composite = ["tests", "format"]}
