@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Self
 
-from .TreeStruct import Node
+from src.simple_invoicing.domain.TreeStruct import Node
+from src.simple_invoicing.utils import custom_hash
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -16,6 +17,9 @@ class FruitTree:
 
     def __str__(self) -> str:
         return str(self.family) + " " + self.name.upper()
+    
+    def __hash__(self) -> int:
+        return custom_hash(str(self))
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -31,6 +35,9 @@ class Rootstock:
             + " "
             + self.id
         )
+    
+    def __hash__(self) -> int:
+        return custom_hash(str(self))
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -40,6 +47,9 @@ class Family:
 
     def __str__(self) -> str:
         return self.sci_name.capitalize() + " " + self.name.capitalize()
+    
+    def __hash__(self) -> int:
+        return custom_hash(str(self))
 
 
 class Category[T: (FruitTree, Rootstock)](Node):
@@ -86,7 +96,9 @@ class Client:
 
     def __post_init__(self) -> None:
         self._category_prices: dict[str, float | None] = {}
-
+    
+    def __hash__(self) -> int:
+        return custom_hash(self.dni_nif)
 
 def add_category_price(client: Client, category: Category, price: float) -> None:
     client._category_prices[category.path] = price
