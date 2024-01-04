@@ -24,3 +24,9 @@ test = [
 dev = [
     "ruff>=0.1.10",
 ]
+
+[tool.pdm.scripts]
+tests = "pytest"
+tests-cov = "pytest --cov=."
+format = "ruff format ."
+all = {composite = ["tests-cov", "format"]}
