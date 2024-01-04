@@ -7,6 +7,7 @@ from src.simple_invoicing.domain.model import (
 )
 
 import pytest
+from sqlite3 import connect
 
 
 @pytest.fixture
@@ -82,3 +83,7 @@ def clients():
         zip_code="28000",
     )
     return (client1, client2, client3)
+
+@pytest.fixture
+def in_memory_db():
+    return connect(":memory:")
