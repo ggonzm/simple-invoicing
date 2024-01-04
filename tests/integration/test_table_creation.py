@@ -1,4 +1,7 @@
 from src.simple_invoicing.adapters.db_tables import create_categories_table, create_clients_table, create_families_table, create_fruit_trees_table, create_rootstocks_table
+import pytest
+import sqlite3
+
 
 def test_create_families_table(in_memory_db):
     create_families_table(in_memory_db)
@@ -21,6 +24,9 @@ def test_create_categories_table(in_memory_db):
     assert in_memory_db.execute("SELECT name FROM sqlite_schema").fetchone() == ('categories',)
 
 def test_table_already_exists_error_is_skipped(in_memory_db):
-    create_families_table(in_memory_db)
-    create_families_table(in_memory_db)
+    try:
+        create_families_table(in_memory_db)
+        create_families_table(in_memory_db)
+    except sqlite3.OperationalError:
+        pytest.fail("create_families_table raised an OperationalError")
     
