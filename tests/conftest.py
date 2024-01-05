@@ -8,6 +8,7 @@ from src.simple_invoicing.domain.model import (
 
 import pytest
 from sqlite3 import connect
+from src.simple_invoicing.adapters.db_tables import create_all_tables
 
 
 @pytest.fixture
@@ -41,16 +42,16 @@ def families():
 @pytest.fixture
 def fruit_trees(rootstock, families):
     family1, family2 = families
-    product1 = FruitTree(family=family1, name="GOLDEN D.", rootstock=rootstock)
-    product2 = FruitTree(family=family1, name="manzano generico", rootstock=rootstock)
-    product3 = FruitTree(family=family2, name="GOLDEN JAPAN", rootstock=None)
+    product1 = FruitTree("GOLDEN D.", family1, rootstock)
+    product2 = FruitTree("MANZANO GENERICO", family1, rootstock)
+    product3 = FruitTree("GOLDEN JAPAN", family2, None)
     return (product1, product2, product3)
 
 
 @pytest.fixture
 def rootstock(families):
     family1, _ = families
-    return Rootstock(family=family1, id="MM-109")
+    return Rootstock("MM-109", family1)
 
 
 @pytest.fixture
@@ -86,4 +87,7 @@ def clients():
 
 @pytest.fixture
 def in_memory_db():
-    return connect(":memory:")
+    con = connect(":memory:")
+    create_all_tables(con)
+    con.commit()
+    return con
