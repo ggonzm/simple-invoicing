@@ -1,23 +1,27 @@
-from src.simple_invoicing.domain.model import Category, FruitTree
+from src.simple_invoicing.domain.model import Category, FruitTree, IncompatibleFamilyError
+import pytest
 
 
 def test_products_creation(fruit_trees, rootstock, families):
     product1, product2, product3 = fruit_trees
     family1, family2 = families
 
-    assert str(product1) == "Malus domestica Manzanos GOLDEN D."
+    assert product1.tag == "GOLDEN D."
     assert product1.family == family1
-
-    assert str(product2) == "Malus domestica Manzanos MANZANO GENERICO"
-    assert str(product3) == "Prunus domestica Ciruelos GOLDEN JAPAN"
-    assert product3.family == family2
-
     assert product1.rootstock == rootstock
-    assert str(rootstock) == "Malus domestica Portainjertos Manzanos MM-109"
+
+    assert product2.tag == "MANZANO GENERICO"
+    assert product2.rootstock == rootstock
+
+    assert product3.tag == "GOLDEN JAPAN"
+    assert product3.family == family2
+    assert product3.rootstock is None
+
+    assert rootstock.tag == "MM-109"
     assert rootstock.family == family1
 
-    assert product2.rootstock == rootstock
-    assert product3.rootstock is None
+    with pytest.raises(IncompatibleFamilyError):
+        FruitTree("GOLDEN D.", family2, rootstock)    
 
 
 def test_subcategory_creation():

@@ -7,7 +7,10 @@ def _create(conn: sqlite3.Connection, sql: str):
     except sqlite3.OperationalError as e:
         # Most of the errors raised are OperationalErrors, but I only want to ignore the ones related to the table already existing
         if not all(substr in str(e) for substr in ["table", "already exists"]):
+            conn.rollback()
             raise e
+    else:
+        conn.commit()
 
 
 def create_families_table(conn: sqlite3.Connection) -> None:
@@ -29,13 +32,11 @@ def create_fruit_trees_table(conn: sqlite3.Connection) -> None:
         """
         CREATE TABLE fruit_trees (
             hash INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            family INTEGER NOT NULL,
-            rootstock INTEGER,
-            category INTEGER,
-            FOREIGN KEY (family) REFERENCES families(hash),
-            FOREIGN KEY (rootstock) REFERENCES rootstocks(hash),
-            FOREIGN KEY (category) REFERENCES category(hash)
+            tag TEXT NOT NULL,
+            family_hash INTEGER NOT NULL,
+            rootstock_hash INTEGER,
+            FOREIGN KEY (family_hash) REFERENCES families(hash),
+            FOREIGN KEY (rootstock_hash) REFERENCES rootstocks(hash)
         )
         """,
     )
@@ -47,11 +48,9 @@ def create_rootstocks_table(conn: sqlite3.Connection) -> None:
         """
         CREATE TABLE rootstocks (
             hash INTEGER PRIMARY KEY,
-            id TEXT NOT NULL,
-            family INTEGER NOT NULL,
-            category INTEGER,
-            FOREIGN KEY (family) REFERENCES families(hash),
-            FOREIGN KEY (category) REFERENCES category(hash)
+            tag TEXT NOT NULL,
+            family_hash INTEGER NOT NULL,
+            FOREIGN KEY (family_hash) REFERENCES families(hash)
         )
         """,
     )
@@ -82,8 +81,33 @@ def create_categories_table(conn: sqlite3.Connection) -> None:
         CREATE TABLE categories (
             hash INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            parent INTEGER,
-            FOREIGN KEY (parent) REFERENCES categories(hash)
+            parent_hash INTEGER,
+            FOREIGN KEY (parent_hash) REFERENCES categories(hash)
+        )
+        """,
+    )
+
+
+def create_intermediate_tables(conn: sqlite3.Connection) -> None:
+    _create(
+        conn,
+        """
+        CREATE TABLE fruit_trees2categories (
+            product_hash INTEGER NOT NULL,
+            category_hash INTEGER NOT NULL,
+            FOREIGN KEY (product_hash) REFERENCES fruit_trees(hash),
+            FOREIGN KEY (category_hash) REFERENCES category(hash)
+        )
+        """,
+    )
+    _create(
+        conn,
+        """
+        CREATE TABLE rootstocks2categories (
+            product_hash INTEGER NOT NULL,
+            category_hash INTEGER NOT NULL,
+            FOREIGN KEY (product_hash) REFERENCES rootstocks(hash),
+            FOREIGN KEY (category_hash) REFERENCES category(hash)
         )
         """,
     )
@@ -95,3 +119,4 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
     create_rootstocks_table(conn)
     create_clients_table(conn)
     create_categories_table(conn)
+    create_intermediate_tables(conn)

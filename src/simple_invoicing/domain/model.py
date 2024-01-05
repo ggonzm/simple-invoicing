@@ -1,55 +1,57 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Self
+from typing import Any, Optional, Self
 
 from src.simple_invoicing.domain.TreeStruct import Node
 from src.simple_invoicing.utils import custom_hash
 
+class IncompatibleFamilyError(Exception):
+    pass
 
-@dataclass(frozen=True, slots=True, kw_only=True)
 class FruitTree:
-    family: Family
-    name: str
-    rootstock: Optional[
-        Rootstock
-    ] = None  # ¿Si family no coincide con la de portainjertos? TODO: mirar libreria attrs y field() en dataclasses
+    def __init__(self, tag:str, family:Family, rootstock:Optional[Rootstock]) -> None:
+        if rootstock and family != rootstock.family:
+            raise IncompatibleFamilyError("The family of the fruit tree and the rootstock must be the same")
+        self.tag = tag
+        self.family =  family
+        self.rootstock = rootstock
 
-    def __str__(self) -> str:
-        return str(self.family) + " " + self.name.upper()
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FruitTree):
+            return False
+        return self.tag == other.tag
     
     def __hash__(self) -> int:
-        return custom_hash(str(self))
+        return custom_hash(self.tag)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
 class Rootstock:
-    family: Family
-    id: str
+    def __init__(self, tag:str, family:Family) -> None:
+        self.tag = tag
+        self.family = family
 
-    def __str__(self) -> str:
-        return (
-            self.family.sci_name.capitalize()
-            + " Portainjertos "
-            + self.family.name.capitalize()
-            + " "
-            + self.id
-        )
-    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Rootstock):
+            return False
+        return self.tag == other.tag
+
     def __hash__(self) -> int:
-        return custom_hash(str(self))
+        return custom_hash(self.tag)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
 class Family:
-    sci_name: str
-    name: str
+    def __init__(self, sci_name:str, name:str) -> None:
+        self.sci_name = sci_name
+        self.name = name
 
-    def __str__(self) -> str:
-        return self.sci_name.capitalize() + " " + self.name.capitalize()
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Family):
+            return False
+        return self.name == other.name
     
     def __hash__(self) -> int:
-        return custom_hash(str(self))
+        return custom_hash(self.name)
 
 
 class Category[T: (FruitTree, Rootstock)](Node):
