@@ -1,57 +1,51 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional, Self
+from typing import Optional, Self
 
 from src.simple_invoicing.domain.TreeStruct import Node
-from src.simple_invoicing.utils import custom_hash
 
-class IncompatibleFamilyError(Exception):
+class RootstockError(Exception):
     pass
 
-class FruitTree:
-    def __init__(self, tag:str, family:Family, rootstock:Optional[Rootstock]) -> None:
-        if rootstock and family != rootstock.family:
-            raise IncompatibleFamilyError("The family of the fruit tree and the rootstock must be the same")
-        self.tag = tag
-        self.family =  family
-        self.rootstock = rootstock
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, FruitTree):
-            return False
-        return self.tag == other.tag
-    
-    def __hash__(self) -> int:
-        return custom_hash(self.tag)
-
-
-class Rootstock:
-    def __init__(self, tag:str, family:Family) -> None:
-        self.tag = tag
-        self.family = family
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Rootstock):
-            return False
-        return self.tag == other.tag
-
-    def __hash__(self) -> int:
-        return custom_hash(self.tag)
-
-
+@dataclass(kw_only=True)
 class Family:
-    def __init__(self, sci_name:str, name:str) -> None:
-        self.sci_name = sci_name
-        self.name = name
+    sci_name: str
+    name: str
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Family):
-            return False
-        return self.name == other.name
+    def __post_init__(self) -> None:
+        self._fruit_trees: set[FruitTree] = set()
+        self._rootstocks: set[Rootstock] = set([Rootstock("FRANCO")])
+
+    @property
+    def fruit_trees(self) -> frozenset[FruitTree]:
+        return frozenset(self._fruit_trees)
+    
+    @property
+    def rootstocks(self) -> frozenset[Rootstock]:
+        return frozenset(self._rootstocks)
+    
+    def add(self, item: FruitTree | Rootstock) -> None:
+        if isinstance(item, FruitTree):
+            if item.rootstock not in self._rootstocks:
+                raise RootstockError(f"{item.rootstock} is not defined in the family {self.name}")
+            self._fruit_trees.add(item)
+        else:
+            self._rootstocks.add(item)
     
     def __hash__(self) -> int:
-        return custom_hash(self.name)
+        return hash(self.name)
+            
+
+@dataclass(frozen=True, slots=True)
+class Rootstock:
+    tag: str
+
+
+@dataclass(frozen=True, slots=True)
+class FruitTree:
+    tag: str
+    rootstock: Rootstock = Rootstock("FRANCO")
 
 
 class Category[T: (FruitTree, Rootstock)](Node):
@@ -60,24 +54,20 @@ class Category[T: (FruitTree, Rootstock)](Node):
         super().__init__(name, parent)
 
     @property
-    def products(self) -> set[T]:
+    def products(self) -> frozenset[T]:
         if self.is_internal():
             for leaf in self.leaves:
                 self._products.update(leaf.products)
-        return self._products
+        return frozenset(self._products)
 
-    def add_subcategory(
-        self, name: str
-    ) -> Self:  # Self and self.__class__ could be replaced by Category[T], but I prefer this way
-        return self.__class__(name, self)
+    def add_subcategory(self, name: str) -> Category:
+        return Category(name, self)
 
-    def add_products(self, *products: T) -> None:
-        """Adds products to the category. If the category is internal, the products are added to the leaves"""
+    def add_product(self, item: T) -> None:
         if self.is_internal():
             for leaf in self.leaves:
-                leaf.add_products(*products)
-        for product in products:
-            self._products.add(product)
+                leaf.add_product(item)
+        self._products.add(item)
 
     def __contains__(self, item: T | Self) -> bool:
         if isinstance(item, Category):
@@ -100,7 +90,7 @@ class Client:
         self._category_prices: dict[str, float | None] = {}
     
     def __hash__(self) -> int:
-        return custom_hash(self.dni_nif)
+        return hash(self.dni_nif)
 
 def add_category_price(client: Client, category: Category, price: float) -> None:
     client._category_prices[category.path] = price

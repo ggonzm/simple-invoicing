@@ -18,9 +18,9 @@ def create_families_table(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE families (
-            hash INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             sci_name TEXT NOT NULL,
-            name TEXT NOT NULL
+            name TEXT NOT NULL UNIQUE
         )
         """,
     )
@@ -31,12 +31,13 @@ def create_fruit_trees_table(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE fruit_trees (
-            hash INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             tag TEXT NOT NULL,
-            family_hash INTEGER NOT NULL,
-            rootstock_hash INTEGER,
-            FOREIGN KEY (family_hash) REFERENCES families(hash),
-            FOREIGN KEY (rootstock_hash) REFERENCES rootstocks(hash)
+            rootstock_id INTEGER,
+            family_id INTEGER,
+            UNIQUE (tag, rootstock_id),
+            FOREIGN KEY (rootstock_id) REFERENCES rootstocks(id),
+            FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
         )
         """,
     )
@@ -47,10 +48,11 @@ def create_rootstocks_table(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE rootstocks (
-            hash INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             tag TEXT NOT NULL,
-            family_hash INTEGER NOT NULL,
-            FOREIGN KEY (family_hash) REFERENCES families(hash)
+            family_id INTEGER,
+            UNIQUE (tag, family_id),
+            FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
         )
         """,
     )
@@ -61,8 +63,8 @@ def create_clients_table(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE clients (
-            hash INTEGER PRIMARY KEY,
-            dni_nif TEXT NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dni_nif TEXT NOT NULL UNIQUE,
             name TEXT NOT NULL,
             tax_name TEXT NOT NULL,
             location TEXT NOT NULL,
@@ -79,10 +81,10 @@ def create_categories_table(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE categories (
-            hash INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            parent_hash INTEGER,
-            FOREIGN KEY (parent_hash) REFERENCES categories(hash)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL UNIQUE,
+            parent_id INTEGER,
+            FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE
         )
         """,
     )
@@ -93,10 +95,11 @@ def create_intermediate_tables(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE fruit_trees2categories (
-            product_hash INTEGER NOT NULL,
-            category_hash INTEGER NOT NULL,
-            FOREIGN KEY (product_hash) REFERENCES fruit_trees(hash),
-            FOREIGN KEY (category_hash) REFERENCES category(hash)
+            product_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            PRIMARY KEY(product_id, category_id),
+            FOREIGN KEY (product_id) REFERENCES fruit_trees(id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
         )
         """,
     )
@@ -104,10 +107,11 @@ def create_intermediate_tables(conn: sqlite3.Connection) -> None:
         conn,
         """
         CREATE TABLE rootstocks2categories (
-            product_hash INTEGER NOT NULL,
-            category_hash INTEGER NOT NULL,
-            FOREIGN KEY (product_hash) REFERENCES rootstocks(hash),
-            FOREIGN KEY (category_hash) REFERENCES category(hash)
+            product_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            PRIMARY KEY(product_id, category_id),
+            FOREIGN KEY (product_id) REFERENCES rootstocks(id) ON DELETE CASCADE,
+            FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
         )
         """,
     )

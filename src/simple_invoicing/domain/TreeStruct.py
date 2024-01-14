@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Optional, Self
-from src.simple_invoicing.utils import custom_hash
 
 # why we need Self and not just Node? Because Node is not a final class,
 # and it's created with the aim of inheriting from it.
@@ -76,7 +75,7 @@ class Node:
         return self.path == other.path and self._children == other._children
 
     def __hash__(self) -> int:
-        return custom_hash(self.path)
+        return hash(self.path)
 
     def __repr__(self) -> str:
         if self._parent:

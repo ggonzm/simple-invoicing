@@ -7,12 +7,12 @@ from src.simple_invoicing.domain.model import (
 )
 
 import pytest
-from sqlite3 import connect
+import sqlite3
 from src.simple_invoicing.adapters.db_tables import create_all_tables
 
 
 @pytest.fixture
-def fruit_category_tree():
+def fruit_category_tree() -> tuple[Category[FruitTree], ...]:
     """
                 Raíz desnuda (n1)
                 /                \
@@ -32,7 +32,7 @@ def fruit_category_tree():
 
 
 @pytest.fixture
-def families():
+def families() -> tuple[Family, ...]:
     return (
         Family(sci_name="Malus domestica", name="manzanos"),
         Family(sci_name="Prunus domestica", name="ciruelos"),
@@ -40,22 +40,20 @@ def families():
 
 
 @pytest.fixture
-def fruit_trees(rootstock, families):
-    family1, family2 = families
-    product1 = FruitTree("GOLDEN D.", family1, rootstock)
-    product2 = FruitTree("MANZANO GENERICO", family1, rootstock)
-    product3 = FruitTree("GOLDEN JAPAN", family2, None)
+def rootstock() -> Rootstock:
+    return Rootstock("MM-109")
+
+
+@pytest.fixture
+def fruit_trees(rootstock) -> tuple[FruitTree, ...]:
+    product1 = FruitTree("GOLDEN D.", rootstock)
+    product2 = FruitTree("MANZANO GENERICO", rootstock)
+    product3 = FruitTree("GOLDEN JAPAN")
     return (product1, product2, product3)
 
 
 @pytest.fixture
-def rootstock(families):
-    family1, _ = families
-    return Rootstock("MM-109", family1)
-
-
-@pytest.fixture
-def clients():
+def clients() -> tuple[Client, ...]:
     client1 = Client(
         dni_nif="12345678Z",
         name="Jhon Doe",
@@ -85,9 +83,11 @@ def clients():
     )
     return (client1, client2, client3)
 
+
 @pytest.fixture
-def in_memory_db():
-    con = connect(":memory:")
+def in_memory_db() -> sqlite3.Connection:
+    con = sqlite3.connect(":memory:")
+    con.execute("PRAGMA foreign_keys = ON")
     create_all_tables(con)
     con.commit()
     return con

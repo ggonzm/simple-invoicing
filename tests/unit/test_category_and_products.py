@@ -1,31 +1,37 @@
-from src.simple_invoicing.domain.model import Category, FruitTree, IncompatibleFamilyError
+from src.simple_invoicing.domain.model import Category, FruitTree, Rootstock, RootstockError
 import pytest
 
 
-def test_products_creation(fruit_trees, rootstock, families):
+def test_products_creation_and_addition_to_a_family(fruit_trees, rootstock, families):
     product1, product2, product3 = fruit_trees
     family1, family2 = families
+    family1.add(rootstock)
+    family1.add(product1)
+    family1.add(product2)
+    family2.add(product3)
+
+    assert rootstock.tag == "MM-109"
+    assert rootstock in family1.rootstocks
+    assert family1.rootstocks == frozenset([Rootstock("FRANCO"), rootstock])
 
     assert product1.tag == "GOLDEN D."
-    assert product1.family == family1
     assert product1.rootstock == rootstock
 
     assert product2.tag == "MANZANO GENERICO"
     assert product2.rootstock == rootstock
+    assert family1.fruit_trees == frozenset([product1, product2])
 
     assert product3.tag == "GOLDEN JAPAN"
-    assert product3.family == family2
-    assert product3.rootstock is None
+    assert product3.rootstock == Rootstock("FRANCO")
+    assert family2.fruit_trees == frozenset([product3])
+    assert family2.rootstocks == frozenset([Rootstock("FRANCO")])
 
-    assert rootstock.tag == "MM-109"
-    assert rootstock.family == family1
-
-    with pytest.raises(IncompatibleFamilyError):
-        FruitTree("GOLDEN D.", family2, rootstock)    
+    with pytest.raises(RootstockError):
+        family2.add(FruitTree("CIRUELO JAPONES", Rootstock("MM-109"))) 
 
 
 def test_subcategory_creation():
-    n1 = Category[FruitTree]("Raíz desnuda")
+    n1 = Category("Raíz desnuda")
     n2 = n1.add_subcategory("Pepita")
     n3 = n2.add_subcategory("1 año")
 
@@ -34,24 +40,26 @@ def test_subcategory_creation():
 
 
 def test_product_allocation_to_a_final_category(fruit_category_tree, fruit_trees):
-    n1, n2, _, n4, *_ = fruit_category_tree
+    _, _, _, n4, *_ = fruit_category_tree
     product1, product2, _ = fruit_trees
 
-    n4.add_products(product1, product2)
+    n4.add_product(product1)
+    n4.add_product(product2)
 
     assert product1 in n4
-    assert n4.products == set([product1, product2])
+    assert n4.products == frozenset([product1, product2])
 
 
 def test_product_allocation_to_an_internal_category(fruit_category_tree, fruit_trees):
     n1, n2, _, n4, *_ = fruit_category_tree
     product1, product2, _ = fruit_trees
 
-    n2.add_products(product1, product2)
+    n4.add_product(product1)
+    n4.add_product(product2)
 
     assert product1 in n4
     assert product2 in n4
-    assert n4.products == set([product1, product2])
+    assert n4.products == frozenset([product1, product2])
 
 
 def test_products_mixed_in_the_same_category(
@@ -60,7 +68,8 @@ def test_products_mixed_in_the_same_category(
     n1, _, _, n4, *_ = fruit_category_tree
     fruit_tree, *_ = fruit_trees
 
-    n4.add_products(fruit_tree, rootstock)  # it's a type error
+    n4.add_product(fruit_tree) # OK
+    n4.add_product(rootstock) # should be a type error
 
     assert not all(isinstance(product, FruitTree) for product in n4.products)
 

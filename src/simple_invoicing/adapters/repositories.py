@@ -5,105 +5,74 @@ from src.simple_invoicing.domain.model import Category, FruitTree, Rootstock, Fa
 class FamilyRepository():
     def __init__(self, conn: sqlite3.Connection) -> None:
         self.conn = conn
+        self._id_cache: dict[Family, int] = {}
 
-    def add(self, item: Family) -> None:
+    def add(self, family: Family) -> None:
         self.conn.execute(
-            "INSERT INTO families (hash, sci_name, name) VALUES (?, ?, ?)",
-            (hash(item), item.sci_name, item.name),
+            "INSERT INTO families (sci_name, name) VALUES (?, ?)",
+            (family.sci_name, family.name),
         )
+        for rootstock in family.rootstocks:
+            self.conn.execute(
+                "INSERT INTO rootstocks (tag, family_id) VALUES (?, ?)",
+                (rootstock.tag, self._get_id(family)),
+            )
+        rootstock_ids = dict(self.conn.execute(
+                    "SELECT tag, id FROM rootstocks WHERE family_id = ?",
+                    (self._get_id(family),)
+                    ).fetchall()
+                )
+        for fruit_tree in family.fruit_trees:
+            self.conn.execute(
+                "INSERT INTO fruit_trees (tag, rootstock_id, family_id) VALUES (?, ?, ?)",
+                (fruit_tree.tag, rootstock_ids[fruit_tree.rootstock.tag], self._get_id(family)),
+            )
 
     def get(self, name: str) -> Family:
         data = self.conn.execute(
                 "SELECT name, sci_name FROM families WHERE name = ?",
                 (name,),
                 ).fetchone()
-        return Family(name=data[0], sci_name=data[1])
+        family = Family(name=data[0], sci_name=data[1])
+        self._load_rootstocks(family)
+        self._load_fruit_trees(family)
+        return family
+    
+    def _load_fruit_trees(self, family: Family) -> None:
+        fruit_trees_data = self.conn.execute(
+                """SELECT ft.tag, rs.tag 
+                   FROM fruit_trees AS ft 
+                   INNER JOIN rootstocks AS rs
+                   ON ft.rootstock_id == rs.id
+                   WHERE ft.family_id = ?""",
+                (self._get_id(family),),
+                ).fetchall()
+        for row in fruit_trees_data:
+            family.add(FruitTree(tag=row[0], rootstock=Rootstock(row[1])))
+        
+    def _load_rootstocks(self, family: Family) -> None:
+        rootstocks_data = self.conn.execute(
+                "SELECT tag FROM rootstocks WHERE family_id = ?",
+                (self._get_id(family),),
+                ).fetchall()
+        for row in rootstocks_data:
+            family.add(Rootstock(tag=row[0]))
 
+    def _get_id(self, family: Family) -> int:
+        if self._id_cache.get(family) is None:
+            id =  self.conn.execute(
+                    "SELECT id FROM families WHERE name = ?",
+                    (family.name,),
+                    ).fetchone()[0]
+            self._id_cache[family] = id
+        return self._id_cache[family]
+        
     def list(self) -> list[Family]:
         data = self.conn.execute(
                 "SELECT name, sci_name FROM families",
                 ).fetchall()
-        families: list[Family] = []
-        for row in data:
-            families.append(Family(name=row[0], sci_name=row[1]))
+        families = [Family(name=row[0], sci_name=row[1]) for row in data]
+        for family in families:
+            self._load_rootstocks(family)
+            self._load_fruit_trees(family)
         return families
-
-class RootstockRepository():
-    def __init__(self, conn: sqlite3.Connection) -> None:
-        self.conn = conn
-
-    def add(self, item: Rootstock) -> None:
-        self.conn.execute(
-            "INSERT INTO rootstocks (hash, tag, family_hash) VALUES (?, ?, ?)",
-            (hash(item), item.tag, hash(item.family)),
-        )
-
-    def get(self, tag: str) -> Rootstock:
-        data = self.conn.execute(
-                "SELECT tag, family_hash FROM rootstocks WHERE tag = ?",
-                (tag,),
-                ).fetchone()
-        family_data = self.conn.execute(
-                "SELECT name, sci_name FROM families WHERE hash = ?",
-                (data[1],),
-                ).fetchone()
-        return Rootstock(tag=data[0], family=Family(name=family_data[0], sci_name=family_data[1]))
-
-    def list(self) -> list[Rootstock]:
-        data = self.conn.execute(
-                "SELECT tag, family_hash FROM rootstocks",
-                ).fetchall()
-        rootstocks: list[Rootstock] = []
-        for row in data:
-            family_data = self.conn.execute(
-                "SELECT name, sci_name FROM families WHERE hash = ?",
-                (row[1],),
-                ).fetchone()
-            rootstocks.append(Rootstock(tag=row[0], family=Family(name=family_data[0], sci_name=family_data[1])))
-        return rootstocks
-
-class FruitTreeRepository():
-    def __init__(self, conn: sqlite3.Connection) -> None:
-        self.conn = conn
-
-    def add(self, item: FruitTree) -> None:
-        self.conn.execute(
-            "INSERT INTO fruit_trees (hash, tag, family_hash, rootstock_hash) VALUES (?, ?, ?, ?)",
-            (hash(item), item.tag, hash(item.family), hash(item.rootstock) if item.rootstock else None),
-        )
-
-    def get(self, tag: str) -> FruitTree:
-        data = self.conn.execute(
-                "SELECT tag, family_hash, rootstock_hash FROM fruit_trees WHERE tag = ?",
-                (tag,),
-                ).fetchone()
-        family_data = self.conn.execute(
-                "SELECT name, sci_name FROM families WHERE hash = ?",
-                (data[1],),
-                ).fetchone()
-        family = Family(name=family_data[0], sci_name=family_data[1])
-        rootstock_data = self.conn.execute(
-                "SELECT tag, family_hash FROM rootstocks WHERE hash = ?",
-                (data[2],),
-                ).fetchone()
-        rootstock = Rootstock(tag=rootstock_data[0], family=Family(name=family_data[0], sci_name=family_data[1])) if rootstock_data else None
-        return FruitTree(tag=data[0], family=family, rootstock=rootstock)
-    
-    def list(self) -> list[FruitTree]:
-        data = self.conn.execute(
-                "SELECT tag, family_hash, rootstock_hash FROM fruit_trees",
-                ).fetchall()
-        fruit_trees: list[FruitTree] = []
-        for row in data:
-            family_data = self.conn.execute(
-                "SELECT name, sci_name FROM families WHERE hash = ?",
-                (row[1],),
-                ).fetchone()
-            family = Family(name=family_data[0], sci_name=family_data[1])
-            rootstock_data = self.conn.execute(
-                "SELECT tag, family_hash FROM rootstocks WHERE hash = ?",
-                (row[2],),
-                ).fetchone()
-            rootstock = Rootstock(tag=rootstock_data[0], family=Family(name=family_data[0], sci_name=family_data[1])) if rootstock_data else None
-            fruit_trees.append(FruitTree(tag=row[0], family=family, rootstock=rootstock))
-        return fruit_trees
