@@ -12,21 +12,10 @@ class FamilyRepository():
             "INSERT INTO families (sci_name, name) VALUES (?, ?)",
             (family.sci_name, family.name),
         )
-        for rootstock in family.rootstocks:
-            self.conn.execute(
-                "INSERT INTO rootstocks (tag, family_id) VALUES (?, ?)",
-                (rootstock.tag, self._get_id(family)),
-            )
-        rootstock_ids = dict(self.conn.execute(
-                    "SELECT tag, id FROM rootstocks WHERE family_id = ?",
-                    (self._get_id(family),)
-                    ).fetchall()
-                )
-        for fruit_tree in family.fruit_trees:
-            self.conn.execute(
-                "INSERT INTO fruit_trees (tag, rootstock_id, family_id) VALUES (?, ?, ?)",
-                (fruit_tree.tag, rootstock_ids[fruit_tree.rootstock.tag], self._get_id(family)),
-            )
+        if family.rootstocks:
+            self._persist_rootstocks(family)
+        if family.fruit_trees:
+            self._persist_fruit_trees(family)
 
     def get(self, name: str) -> Family:
         data = self.conn.execute(
@@ -66,6 +55,26 @@ class FamilyRepository():
                     ).fetchone()[0]
             self._id_cache[family] = id
         return self._id_cache[family]
+    
+    def _persist_rootstocks(self, family: Family) -> None:
+        values = ''
+        for rootstock in family.rootstocks:
+            values += f"('{rootstock.tag}', {self._get_id(family)}), "
+        self.conn.execute(f"INSERT INTO rootstocks (tag, family_id) VALUES {values[:-2]}")
+    
+    def _persist_fruit_trees(self, family: Family) -> None:
+        values = ''
+        rootstock_ids = self._get_rootstock_ids(family)
+        for fruit_tree in family.fruit_trees:
+            values += f"('{fruit_tree.tag}', {rootstock_ids[fruit_tree.rootstock.tag]}, {self._get_id(family)}), "
+        self.conn.execute(f"INSERT INTO fruit_trees (tag, rootstock_id, family_id) VALUES {values[:-2]}")
+    
+    def _get_rootstock_ids(self, family: Family) -> dict[str, int]:
+        rootstocks_data = self.conn.execute(
+                "SELECT tag, id FROM rootstocks WHERE family_id = ?",
+                (self._get_id(family),),
+                ).fetchall()
+        return dict(rootstocks_data)
         
     def list(self) -> list[Family]:
         data = self.conn.execute(
