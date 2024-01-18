@@ -27,7 +27,7 @@ dev = [
 
 [tool.pdm.scripts]
 unit-tests = "pytest tests/unit/ --cov=src/simple_invoicing/domain/"
-integration-tests = "pytest tests/integration/ --cov=src/simple_invoicing/adapters/ --cov=src/simple_invoicing/services/"
+integration-tests = "pytest tests/integration/ --cov=src/simple_invoicing/persistence/ --cov=src/simple_invoicing/services/"
 e2e-tests = "pytest tests/e2e/"
 tests = {composite = ["unit-tests", "integration-tests", "e2e-tests"]}
 format = "ruff format ."

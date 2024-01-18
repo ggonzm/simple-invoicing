@@ -1,4 +1,5 @@
 import sqlite3
+from src.simple_invoicing.config import get_sqlite_database_uri
 
 
 def _create(conn: sqlite3.Connection, sql: str):
@@ -35,8 +36,8 @@ def create_fruit_trees_table(conn: sqlite3.Connection) -> None:
             tag TEXT NOT NULL,
             rootstock_id INTEGER,
             family_id INTEGER,
-            UNIQUE (tag, rootstock_id),
-            FOREIGN KEY (rootstock_id) REFERENCES rootstocks(id),
+            UNIQUE (tag, rootstock_id, family_id),
+            FOREIGN KEY (rootstock_id) REFERENCES rootstocks(id) ON DELETE CASCADE,
             FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
         )
         """,
@@ -99,7 +100,7 @@ def create_intermediate_tables(conn: sqlite3.Connection) -> None:
             category_id INTEGER NOT NULL,
             PRIMARY KEY(product_id, category_id),
             FOREIGN KEY (product_id) REFERENCES fruit_trees(id) ON DELETE CASCADE,
-            FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
         )
         """,
     )
@@ -111,7 +112,7 @@ def create_intermediate_tables(conn: sqlite3.Connection) -> None:
             category_id INTEGER NOT NULL,
             PRIMARY KEY(product_id, category_id),
             FOREIGN KEY (product_id) REFERENCES rootstocks(id) ON DELETE CASCADE,
-            FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
+            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
         )
         """,
     )
@@ -124,3 +125,9 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
     create_clients_table(conn)
     create_categories_table(conn)
     create_intermediate_tables(conn)
+
+
+def default_conn_factory() -> sqlite3.Connection:
+    con = sqlite3.connect(get_sqlite_database_uri(), uri=True)
+    con.execute("PRAGMA foreign_keys = ON")
+    return con

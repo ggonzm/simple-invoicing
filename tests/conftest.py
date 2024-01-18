@@ -8,7 +8,8 @@ from src.simple_invoicing.domain.model import (
 
 import pytest
 import sqlite3
-from src.simple_invoicing.adapters.db_tables import create_all_tables
+from collections.abc import Callable
+from src.simple_invoicing.persistence.db import create_all_tables
 
 
 @pytest.fixture
@@ -85,9 +86,24 @@ def clients() -> tuple[Client, ...]:
 
 
 @pytest.fixture
-def in_memory_db() -> sqlite3.Connection:
-    con = sqlite3.connect(":memory:")
-    con.execute("PRAGMA foreign_keys = ON")
+def test_db():
+    URI = "file::memory:?cache=shared"
+    con = sqlite3.connect(URI, uri=True)
     create_all_tables(con)
     con.commit()
-    return con
+    yield URI
+    con.close()
+
+@pytest.fixture
+def conn_factory(test_db) -> Callable[[], sqlite3.Connection]:
+    def _conn():
+        conn = sqlite3.connect(test_db, uri=True)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
+    return _conn
+
+@pytest.fixture
+def conn(conn_factory):
+    conn = conn_factory()
+    yield conn
+    conn.close()
