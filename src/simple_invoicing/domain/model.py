@@ -1,21 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Self
+from typing import Any, Optional, Self
 
 from src.simple_invoicing.domain.TreeStruct import Node
 
 class RootstockError(Exception):
     pass
 
-@dataclass(kw_only=True)
 class Family:
-    sci_name: str
-    name: str
-
-    def __post_init__(self) -> None:
+    def __init__(self, name:str, sci_name:str) -> None:
+        self._name = name
+        self.sci_name = sci_name
         self._fruit_trees: set[FruitTree] = set()
         self._rootstocks: set[Rootstock] = set([Rootstock("FRANCO")])
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def fruit_trees(self) -> frozenset[FruitTree]:
@@ -32,6 +34,20 @@ class Family:
             self._fruit_trees.add(item)
         else:
             self._rootstocks.add(item)
+    
+    def remove(self, item: FruitTree | Rootstock) -> None:
+        if isinstance(item, FruitTree):
+            self._fruit_trees.remove(item)
+        else:
+            self._rootstocks.remove(item)
+            self._remove_fruit_trees_with_rootstock(item)
+    
+    def _remove_fruit_trees_with_rootstock(self, rootstock: Rootstock) -> None:
+        to_remove = set([item for item in self._fruit_trees if item.rootstock == rootstock])
+        self._fruit_trees.difference_update(to_remove)
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Family) and self.name == other.name
     
     def __hash__(self) -> int:
         return hash(self.name)

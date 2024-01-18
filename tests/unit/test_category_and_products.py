@@ -29,6 +29,22 @@ def test_products_creation_and_addition_to_a_family(fruit_trees, rootstock, fami
     with pytest.raises(RootstockError):
         family2.add(FruitTree("CIRUELO JAPONES", Rootstock("MM-109"))) 
 
+def test_product_deletion_from_a_family(fruit_trees, rootstock, families):
+    product1, product2, _ = fruit_trees
+    family1, _ = families
+    family1.add(rootstock)
+    family1.add(product1)
+    family1.add(product2)
+
+    assert family1.fruit_trees == frozenset([product1, product2])
+    family1.remove(product1)
+    assert family1.fruit_trees == frozenset([product2])
+
+    assert rootstock in family1.rootstocks
+    family1.remove(rootstock)
+    assert rootstock not in family1.rootstocks
+    assert family1.rootstocks == frozenset([Rootstock("FRANCO")])
+    assert family1.fruit_trees == frozenset()
 
 def test_subcategory_creation():
     n1 = Category("Raíz desnuda")
