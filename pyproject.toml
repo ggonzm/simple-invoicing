@@ -26,6 +26,7 @@ dev = [
 ]
 
 [tool.pdm.scripts]
+count-tests = {shell = "grep -c test_ tests/**/test_*.py"}
 unit-tests = "pytest tests/unit/ --cov=src/simple_invoicing/domain/"
 integration-tests = "pytest tests/integration/ --cov=src/simple_invoicing/persistence/ --cov=src/simple_invoicing/services/"
 e2e-tests = "pytest tests/e2e/"
