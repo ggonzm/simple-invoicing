@@ -78,3 +78,12 @@ def test_family_repository_always_returns_the_same_object(conn):
     family1 = repo.get("manzanos")
     family2 = repo.get("manzanos")
     assert family1 is family2
+
+def test_family_repository_can_delete_a_family_and_its_products(conn):
+    insert_items(conn)
+    repo = FamilyRepository(conn)
+    repo.delete("manzanos")
+    conn.commit()
+    assert set(conn.execute("SELECT name FROM families").fetchall()) == set([("ciruelos",)])
+    assert set(conn.execute("SELECT tag, family_id FROM rootstocks").fetchall()) == set([("FRANCO",2)])
+    assert set(conn.execute("SELECT tag, rootstock_id, family_id FROM fruit_trees").fetchall()) == set()

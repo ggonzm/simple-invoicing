@@ -15,6 +15,9 @@ class Repository[T](Protocol):
     def update(self) -> None:
         ...
 
+    def delete(self, identity: str) -> None:
+        ...
+
     def list(self) -> list[T]:
         ...
 
@@ -149,7 +152,13 @@ class FamilyRepository():
                 (family_id,),
                 ).fetchall()
         return dict(rootstocks_data)
-        
+    
+    def delete(self, identity: str) -> None:
+        self.conn.execute(
+                "DELETE FROM families WHERE name = ?",
+                (identity,),
+        )
+
     def list(self) -> list[Family]:
         data = self.conn.execute(
                 "SELECT name, sci_name FROM families",
