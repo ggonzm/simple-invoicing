@@ -28,6 +28,7 @@ dev = [
 [tool.pdm.scripts]
 count-tests = {shell = "grep -c test_ tests/**/test_*.py"}
 unit-tests = "pytest tests/unit/ --cov=src/simple_invoicing/domain/"
+api-tests = {shell = "pytest tests/**/test_*services.py"}
 integration-tests = "pytest tests/integration/ --cov=src/simple_invoicing/persistence/ --cov=src/simple_invoicing/services/"
 e2e-tests = "pytest tests/e2e/"
 tests = {composite = ["unit-tests", "integration-tests", "e2e-tests"]}
