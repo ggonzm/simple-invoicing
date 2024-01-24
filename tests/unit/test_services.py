@@ -97,10 +97,11 @@ def test_get_families_returns_all_families_represented_as_dict():
     services.add_family("manzanos", "Malus domestica", uow)
     services.add_fruit_tree("FRANCO", "Golden", "manzanos", uow)
     services.add_rootstock("MM-109", "manzanos", uow)
-    assert services.get_families(uow) == [
-        {"name": "manzanos",
-         "sci_name": "Malus domestica",
-         "fruit_trees": [{"tag": "Golden", "rootstock": {"tag": "FRANCO"}}],
-         "rootstocks": [{"tag": "FRANCO"}, {"tag": "MM-109"}]
-        }
-        ]
+    family_dicts = services.get_families(uow)
+    assert len(family_dicts) == 1
+
+    family = family_dicts[0]
+    assert family["name"] == "manzanos"
+    assert family["sci_name"] == "Malus domestica"
+    assert {"tag": "MM-109"} in family["rootstocks"] and {"tag": "FRANCO"} in family["rootstocks"] and len(family["rootstocks"]) == 2
+    assert {"tag": "Golden", "rootstock": {"tag": "FRANCO"}} in family["fruit_trees"] and len(family["fruit_trees"]) == 1
