@@ -1,3 +1,4 @@
+from typing import Any
 from src.simple_invoicing.domain.model import FruitTree, Family, Rootstock
 from src.simple_invoicing.services.units_of_work import UnitOfWork
 
@@ -34,3 +35,10 @@ def remove_family(name: str, uow: UnitOfWork[Family]) -> None:
     with uow:
         uow.repo.delete(name)
         uow.commit()
+
+def get_families(uow: UnitOfWork[Family]) -> list[dict[str, Any]]:
+    with uow:
+        families = uow.repo.list()
+        if families:
+            return [family.asdict() for family in families]
+        return []

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Any, Optional, Self
 
 from src.simple_invoicing.domain.TreeStruct import Node
@@ -45,6 +45,14 @@ class Family:
     def _remove_fruit_trees_with_rootstock(self, rootstock: Rootstock) -> None:
         to_remove = set([item for item in self._fruit_trees if item.rootstock == rootstock])
         self._fruit_trees.difference_update(to_remove)
+
+    def asdict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "sci_name": self.sci_name,
+            "fruit_trees": [asdict(item) for item in self.fruit_trees],
+            "rootstocks": [asdict(item) for item in self.rootstocks]
+        }
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, Family) and self.name == other.name

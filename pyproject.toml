@@ -13,7 +13,7 @@ license = {text = "MIT"}
 
 
 [tool.pdm]
-package-type = "application"
+distribution = false
 
 [tool.pdm.dev-dependencies]
 test = [
@@ -26,6 +26,7 @@ dev = [
 ]
 
 [tool.pdm.scripts]
+UI = {call = "src.simple_invoicing.UI.tk:main"}
 count-tests = {shell = "grep -c test_ tests/**/test_*.py"}
 unit-tests = "pytest tests/unit/ --cov=src/simple_invoicing/domain/"
 api-tests = {shell = "pytest tests/**/test_*services.py"}

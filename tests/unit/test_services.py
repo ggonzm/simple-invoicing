@@ -91,3 +91,16 @@ def test_remove_family():
     services.add_rootstock("MM-109", "manzanos", uow)
     services.remove_family("manzanos", uow)
     assert uow.repo.list() == []
+
+def test_get_families_returns_all_families_represented_as_dict():
+    uow = FakeFamilyUnitOfWork()
+    services.add_family("manzanos", "Malus domestica", uow)
+    services.add_fruit_tree("FRANCO", "Golden", "manzanos", uow)
+    services.add_rootstock("MM-109", "manzanos", uow)
+    assert services.get_families(uow) == [
+        {"name": "manzanos",
+         "sci_name": "Malus domestica",
+         "fruit_trees": [{"tag": "Golden", "rootstock": {"tag": "FRANCO"}}],
+         "rootstocks": [{"tag": "FRANCO"}, {"tag": "MM-109"}]
+        }
+        ]
