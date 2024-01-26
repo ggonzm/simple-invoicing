@@ -1,6 +1,7 @@
 from __future__ import annotations
 from tkinter.ttk import Frame, Label, Entry, Button, Style, Treeview, Scrollbar, Combobox, Notebook, Progressbar, Separator, Labelframe
 from dataclasses import dataclass
+from src.simple_invoicing.UI.models.events import FamilyAdded
 
 class FamilyView(Frame):
     creation_area: _CreationArea
@@ -59,12 +60,10 @@ class _Display(Frame):
         Label(self, text="Portainjertos").grid(row=0, column=3, sticky="e", padx=12)
         Label(self, text="Árboles").grid(row=0, column=4, sticky="e", padx=12)
     
-    def show_new_family(self, name: str, sci_name:str, rootstocks: int, fruit_trees: int) -> None:
+    def show_family(self, name: str, sci_name: str) -> None:
         rows , cols = self.grid_size()
         Button(self, text=name, state='pressed').grid(row=rows + 1, column=0, sticky="ew")
         Button(self, text=sci_name, state='pressed').grid(row=rows + 1, column=cols + 2, sticky="ew")
-        Button(self, text=rootstocks, state='pressed').grid(row=rows + 1, column=cols + 3, sticky="ew")
-        Button(self, text=fruit_trees, state='pressed').grid(row=rows + 1, column=cols + 4, sticky="ew")
 
     def _resize_behaviour(self):
         pass

@@ -1,5 +1,7 @@
 from src.simple_invoicing.UI.controllers.family_controller import FamilyController
 from src.simple_invoicing.UI.views.family_view import FamilyView
+from src.simple_invoicing.UI.models.events import Event
+from typing import Callable
 
 # https://stackoverflow.com/questions/65468655/vs-code-remote-x11-cant-get-display-while-connecting-to-remote-server
 # Needed to run the tests because a GUI is used in a remote server
@@ -14,16 +16,13 @@ class FakeFamilyModel():
         self.commands.append(f"ADD_FAMILY ({name}, {sci_name})")
         print(self.commands)
     
-    def subscribe(self, event, fn):
-        if self.events.get(event) is None:
-            self.events[event] = []
-        self.events[event].append(fn)
+    def subscribe(self, event_type: type[Event], fn: Callable):
+        if self.events.get(event_type) is None:
+            self.events[event_type] = []
+        self.events[event_type].append(fn)
         print(self.events)
     
     def trigger_event(self, event):
-        pass
-
-    def unsubscribe(self, event, fn):
         pass
 
 
