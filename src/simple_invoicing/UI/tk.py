@@ -20,14 +20,8 @@ def main():
     s = Style()
     s.configure("debug.TFrame", background="red")
 
-    main_menu = Menu(root)
-    file_menu = Menu(main_menu)
-    main_menu.add_cascade(label="File", menu=file_menu)
-    file_menu.add_command(label="Exit", command=root.quit)
-    root.config(menu=main_menu)
-
     view = FamilyView(root, padding=3)
-    view.pack(expand=True, fill="both")
+    view.grid(row=0, column=0, sticky="nsew")
 
     controller = FamilyController(view, FakeFamilyModel())
 

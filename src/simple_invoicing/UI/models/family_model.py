@@ -10,6 +10,7 @@ class SupportsFamilyAPI(SupportsObserver, Protocol):
 
 class FamilyModel(Observable):
     def __init__(self):
+        super().__init__()
         self.uow = FamilyUnitOfWork()
     
     def add_family(self, name: str, sci_name: str) -> None:

@@ -2,10 +2,11 @@ from __future__ import annotations
 from tkinter.ttk import Frame, Label, Entry, Button, Style, Treeview, Scrollbar, Combobox, Notebook, Progressbar, Separator, Labelframe
 from dataclasses import dataclass
 from src.simple_invoicing.UI.models.events import FamilyAdded
+from src.simple_invoicing.UI.views.common import Table
 
 class FamilyView(Frame):
     creation_area: _CreationArea
-    display: _Display
+    display: Table
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -14,8 +15,11 @@ class FamilyView(Frame):
     def _create_widgets(self):
         self.creation_area = _CreationArea(self, title="Crear familia", padding=(3,3,12,12))
         self.creation_area.grid(row=0, column=0, sticky="nsew")
-        self.display = _Display(self, padding=(3,3,12,12), style="debug.TFrame")
+        self.display = Table(self, col_names=["Nombre", "Nombre científico"], padding=(3,3,12,12), style="debug.TFrame")
         self.display.grid(row=0, column=1, sticky="nsew")
+
+    def on_family_added(self, event: FamilyAdded):
+        self.display.add_row([event.name, event.sci_name])
 
 
 class _CreationArea(Labelframe):
@@ -46,24 +50,3 @@ class _CreationArea(Labelframe):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
-
-class _Display(Frame):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._create_widgets()
-        self._resize_behaviour()
-
-    def _create_widgets(self):
-        Label(self, text="Familia").grid(row=0, column=1, sticky="e", padx=12)
-        Label(self, text="Nombre científico").grid(row=0, column=2, sticky="e", padx=12)
-        Label(self, text="Portainjertos").grid(row=0, column=3, sticky="e", padx=12)
-        Label(self, text="Árboles").grid(row=0, column=4, sticky="e", padx=12)
-    
-    def show_family(self, name: str, sci_name: str) -> None:
-        rows , cols = self.grid_size()
-        Button(self, text=name, state='pressed').grid(row=rows + 1, column=0, sticky="ew")
-        Button(self, text=sci_name, state='pressed').grid(row=rows + 1, column=cols + 2, sticky="ew")
-
-    def _resize_behaviour(self):
-        pass

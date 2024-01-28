@@ -13,7 +13,7 @@ class FamilyController():
 
     def _bind_events(self):
         self.view.creation_area.save.configure(command=self._add_family)
-        self.model.subscribe(FamilyAdded, self.view.display.show_new_family)
+        self.model.subscribe(FamilyAdded, self.view.on_family_added)
 
     def _add_family(self):
         name = self.view.creation_area.name.get()
