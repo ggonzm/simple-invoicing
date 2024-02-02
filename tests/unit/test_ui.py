@@ -12,7 +12,7 @@ def test_table():
     table = Table(col_names=["col1", "col2"])
     table.add_row(["a", "b"])
     table.add_row(["c", "d"])
-
+    
     assert table.rows == [["a", "b"], ["c", "d"]]
     assert table.cols == [["a", "c"], ["b", "d"]]
     assert table[1,0] == "a"
@@ -23,16 +23,21 @@ def test_table():
     assert table[:,:] == [["col1","col2"], ["a", "b"], ["c", "d"]]
     assert table[1:,:] == [["a","b"], ["c", "d"]]
     assert table[1:,1:] == [["b"], ["d"]]
-    
 
 class FakeFamilyModel(Observable):
+    commands: list[str]
+    listeners_called: list[str]
+    _families: list[list[str]]
+
     def __init__(self):
         super().__init__()
         self.commands = []
         self.listeners_called = []
+        self._families = []
 
     def add_family(self, name: str, sci_name: str) -> None:
         self.commands.append(f"ADD_FAMILY ({name}, {sci_name})")
+        self._families.append([name, sci_name])
         self.trigger_event(FamilyAdded(name, sci_name))
         print(self.commands)
     
@@ -41,6 +46,9 @@ class FakeFamilyModel(Observable):
             self.listeners_called.append(f'{fn.__name__}({event})')
             fn(event)
         print(self.listeners_called)
+
+def test_existing_families_are_displayed_when_familyview_is_shown():
+    pass
 
 def test_user_can_add_new_families():
     view = FamilyView()
@@ -52,8 +60,15 @@ def test_user_can_add_new_families():
     view.creation_area.save.invoke()
     expected_event = FamilyAdded("manzanos", "nombre científico")
 
+    assert model._families == [["manzanos", "nombre científico"]]
     assert len(model.commands) == 1
     assert model.commands == ["ADD_FAMILY (manzanos, nombre científico)"]
     assert len(model.listeners_called) == 1
     assert model.listeners_called == [f"on_family_added({expected_event})"]
     assert view.display[1,:] == ["manzanos", "nombre científico"]
+
+def test_user_can_delete_existing_families():
+    view = FamilyView()
+    model = FakeFamilyModel()
+    model._families = [["manzanos", "nombre científico"], ["perales", "nombre científico"]]
+    controller = FamilyController(view, model)
