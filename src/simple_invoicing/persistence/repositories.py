@@ -1,8 +1,9 @@
-import sqlite3
 from collections.abc import Set
 from typing import Protocol
 from src.simple_invoicing.domain.model import Category, FruitTree, Rootstock, Family, Client
 from src.simple_invoicing.persistence.snapshot import Snapshot
+from src.simple_invoicing.persistence.db import Connection, ignore
+from src.simple_invoicing.persistence.exceptions import UniqueConstraintError
 
 class Repository[T](Protocol):
 
@@ -22,16 +23,19 @@ class Repository[T](Protocol):
         ...
 
 class FamilyRepository():
-    def __init__(self, conn: sqlite3.Connection) -> None:
+    def __init__(self, conn: Connection) -> None:
         self.conn = conn
         self._indentity_id: dict[str, int] = {}
         self._snapshots: dict[Family, Snapshot[Family]] = {}
 
     def add(self, item: Family) -> None:
-        self.conn.execute(
-            "INSERT INTO families (sci_name, name) VALUES (?, ?)",
-            (item.sci_name, item.name),
-        )
+        try:
+            self.conn.execute(
+                "INSERT INTO families (sci_name, name) VALUES (?, ?)",
+                (item.sci_name, item.name),
+            )
+        except UniqueConstraintError:
+            return
         if item.rootstocks:
             self._persist_rootstocks(self._get_id(item), item.rootstocks)
         if item.fruit_trees:

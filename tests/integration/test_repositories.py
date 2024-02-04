@@ -23,6 +23,18 @@ def test_family_repository_can_add_families_and_their_products(conn, fruit_trees
     assert set(conn.execute("SELECT tag FROM rootstocks").fetchall()) == set([("FRANCO",), ("MM-109",),])
     assert set(conn.execute("SELECT tag FROM fruit_trees").fetchall()) == set([("GOLDEN D.",), ("MANZANO GENERICO",), ])
 
+def test_family_addition_is_idempotent(conn, fruit_trees, rootstock, families):
+    product1, *_ = fruit_trees
+    family1, _ = families
+
+    repo = FamilyRepository(conn)
+    repo.add(family1)
+    conn.commit()
+    repo.add(family1)
+    conn.commit()
+
+    assert set(conn.execute("SELECT name, sci_name FROM families").fetchall()) == set([("manzanos", "Malus domestica",)])
+
 def test_family_repository_can_get_families_and_their_products(conn, fruit_trees, rootstock, families):
     product1, product2, product3 = fruit_trees
     family1, family2 = families

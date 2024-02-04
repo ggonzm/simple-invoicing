@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from src.simple_invoicing.persistence.repositories import Repository, FamilyRepository
 from src.simple_invoicing.persistence.db import default_conn_factory
+from src.simple_invoicing.persistence.db import Connection
 from src.simple_invoicing.domain.model import Family
 from typing import Callable
-import sqlite3
 
 class UnitOfWork[T]():
     repo: Repository[T]
@@ -23,7 +23,7 @@ class UnitOfWork[T]():
 
 
 class FamilyUnitOfWork(UnitOfWork[Family]):
-    def __init__(self, conn_factory: Callable[[], sqlite3.Connection] = default_conn_factory) -> None:
+    def __init__(self, conn_factory: Callable[[], Connection] = default_conn_factory) -> None:
         self.conn = conn_factory()
         self.repo = FamilyRepository(self.conn)
     

@@ -51,6 +51,12 @@ def test_add_family():
     services.add_family("manzanos", "Malus domestica", uow)
     assert uow.repo.get("manzanos") is not None
 
+def test_add_family_is_idempotent():
+    uow = FakeFamilyUnitOfWork()
+    services.add_family("manzanos", "Malus domestica", uow)
+    services.add_family("manzanos", "nombre científico", uow)
+    assert uow.repo.list() == [Family("manzanos", "Malus domestica")]
+
 def test_add_rootstock():
     uow = FakeFamilyUnitOfWork()
     services.add_family("manzanos", "Malus domestica", uow)

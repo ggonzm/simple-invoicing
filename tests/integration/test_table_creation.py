@@ -1,10 +1,10 @@
-from src.simple_invoicing.persistence.db import create_categories_table, create_clients_table, create_families_table, create_fruit_trees_table, create_rootstocks_table, create_intermediate_tables
+from src.simple_invoicing.persistence.db import Connection, create_categories_table, create_clients_table, create_families_table, create_fruit_trees_table, create_rootstocks_table, create_intermediate_tables
 import pytest
 import sqlite3
 
 @pytest.fixture
 def empty_in_memory_db():
-    return sqlite3.connect(":memory:")
+    return Connection.connect(":memory:")
 
 def test_create_families_table(empty_in_memory_db):
     create_families_table(empty_in_memory_db)
