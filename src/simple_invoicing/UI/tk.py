@@ -18,12 +18,16 @@ def main():
     root.title("App")
     root.geometry(get_geometry(root))
     s = Style()
-    s.configure("debug.TFrame", background="red")
+    s.map("TEntry", 
+          foreground=[('disabled', 'black')],
+    )
 
     view = FamilyView(root, padding=3)
     view.grid(row=0, column=0, sticky="nsew")
 
-    controller = FamilyController(view, FakeFamilyModel())
+    model = FakeFamilyModel()
+    model._families = [("manzanos", "nombre científico"),("perales","nombre científico")]
+    controller = FamilyController(view, model)
 
     root.iconify()
     root.mainloop()
