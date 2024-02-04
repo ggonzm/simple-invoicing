@@ -67,16 +67,15 @@ def test_product_allocation_to_a_final_category(fruit_category_tree, fruit_trees
 
 
 def test_product_allocation_to_an_internal_category(fruit_category_tree, fruit_trees):
-    n1, n2, _, n4, *_ = fruit_category_tree
+    _, n2, _, n4, *_ = fruit_category_tree
     product1, product2, _ = fruit_trees
 
-    n4.add_product(product1)
-    n4.add_product(product2)
+    n2.add_product(product1)
+    n2.add_product(product2)
 
     assert product1 in n4
     assert product2 in n4
     assert n4.products == frozenset([product1, product2])
-
 
 def test_products_mixed_in_the_same_category(
     fruit_category_tree, fruit_trees, rootstock
@@ -88,7 +87,3 @@ def test_products_mixed_in_the_same_category(
     n4.add_product(rootstock) # should be a type error
 
     assert not all(isinstance(product, FruitTree) for product in n4.products)
-
-
-def test_product_deletion():
-    pass
